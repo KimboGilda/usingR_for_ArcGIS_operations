@@ -1,0 +1,82 @@
+---
+title: "Cleaning_G2020"
+author: "Nikos Bakogiannis"
+date: "12 5 2021"
+output: html_document
+---
+
+
+```{r libraries, include=FALSE}
+library(sf)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+```
+
+```{r importData, include=FALSE}
+g1g20_lv03 <- read_sf("..//ggg_2020-LV03//ggg_2020_LV03.gdb", layer = "g1g20")
+g2g20_lv03 <- read_sf("..//ggg_2020-LV03//ggg_2020_LV03.gdb", layer = "g2g20")
+
+g1g20_lv95 <- read_sf("..//ggg_2020-LV95/ggg_2020-LV95.gdb", layer = "g1g20")
+g2g20_lv95 <- read_sf("..//ggg_2020-LV95/ggg_2020-LV95.gdb", layer = "g2g20")
+```
+
+```{r filtering, include=FALSE}
+### HELPER FUNCTIONS ###
+# helper function for selecting only the columns we want at the end
+cleaning <- function(datensatz) {
+  vec_keep <- c("GMDNR","GMDNAME", "KTNR","Shape_Length","Shape_Area")
+  datensatz <- datensatz %>%
+    dplyr::select(.,vec_keep) %>%
+    dplyr::rename(.,c("GemeindeNo"="GMDNR", "Name"="GMDNAME", "KantonNo"="KTNR","Shape_Leng"="Shape_Length"))
+  return(datensatz)
+}
+
+# helper function for reordering the columns as we wish
+reorder <- function(datensatz) {
+  col_order <- c("GemeindeNo", "Name", "KantonNo",
+               "KantonKurz", "Shape_Leng", "Shape_Area")
+  datensatz <- datensatz[, col_order]
+  
+  return(datensatz)
+}
+```
+
+```{r Kantons, include=FALSE}
+# Creating a dataframe with the respective Kanton Numbers and abbreviations
+kantons <-data.frame("KantonNo" = seq(1:26),
+                     "KantonKurz" = c("ZH", "BE","LU","UR","SZ","OW","NW",
+                                      "GL","ZG","FR","SO","BS","BL","SH",
+                                      "AR","AI","SG","GR","AG","TG","TI",
+                                      "VD","VS","NE","GE","JU"))
+```
+
+```{r wrapping up, include=FALSE}
+# executing
+g1g20_lv03 <- cleaning(g1g20_lv03) %>%
+  inner_join(.,kantons,by = "KantonNo") %>%
+  reorder(.)
+
+g2g20_lv03 <- cleaning(g2g20_lv03) %>%
+  inner_join(.,kantons,by = "KantonNo") %>%
+  reorder(.)
+
+g1g20_lv95 <- cleaning(g1g20_lv95) %>%
+  inner_join(.,kantons,by = "KantonNo") %>%
+  reorder(.)
+
+g2g20_lv95 <- cleaning(g2g20_lv95) %>%
+  inner_join(.,kantons,by = "KantonNo") %>%
+  reorder(.)
+
+```
+
+```{r exporting to .shp, include=FALSE}
+G1G20 <- write_sf(g1g20_lv03,"gen_20/G1G20.shp")
+G2G20 <- write_sf(g2g20_lv03,"gen_20/G2G20.shp")
+
+G1G20lv95 <- write_sf(g1g20_lv95,"gen_20/G1G20lv95.shp")
+G2G20lv95 <- write_sf(g2g20_lv95,"gen_20/G2G20lv95.shp")
+```
+
+
