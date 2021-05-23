@@ -1,0 +1,40 @@
+```{r}
+source('helper_functions.R')
+library(sf)
+library(dplyr)
+library(tidyr)
+```
+
+```{r}
+# 2001
+g1 <- read_sf("bis_2009/g1_01/G1G01.shp") %>%
+  dplyr::select(.,-BEZIRK) %>%
+  dplyr::rename(.,c("GemeindeNo"="GMDE", "Name"="NAME", "KantonNo"="KT"))
+
+g2 <- read_sf("bis_2009/g2_01/G2G01.shp") %>%
+  dplyr::select(.,-BEZIRK) %>%
+  dplyr::rename(.,c("GemeindeNo"="GMDE", "Name"="NAME", "KantonNo"="KT"))
+```
+
+```{r executing}
+# laying the ground
+kantons <-data.frame("KantonNo" = seq(1:26),
+                       "KantonKurz" = c("ZH", "BE","LU","UR","SZ","OW","NW",
+                                        "GL","ZG","FR","SO","BS","BL","SH",
+                                        "AR","AI","SG","GR","AG","TG","TI",
+                                        "VD","VS","NE","GE","JU"))
+```
+
+### Executing
+```{r}
+g1g01 <- inner_join(g1,kantons,by = "KantonNo") %>%
+  reorder2(.)
+
+G1G01 <- write_sf(g1g01,"G01/g1g01.shp")
+
+g2g01 <- inner_join(g2,kantons,by = "KantonNo") %>%
+  reorder2(.)
+
+G2G01 <- write_sf(g2g01,"G01/g2g01.shp")
+```
+

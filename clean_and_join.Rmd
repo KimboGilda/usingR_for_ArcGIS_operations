@@ -1,0 +1,51 @@
+
+## Import libraries
+```{r}
+library(sf)
+source('helper_functions.R')
+```
+
+
+## 2012
+```{r}
+g1g12_lv03 <- read_sf("../../../gines/Gener_Daten/2012/g1g12_shp_121130/G1G12.shp")
+g2g12_lv03 <- read_sf("../../../gines/Gener_Daten/2012/g2g12_shp_121130/G2G12.shp")
+
+g1g12_lv95 <- read_sf("../../../gines/Gener_Daten/2012/ggg_2012/fgdb/", layer = "g1g12")
+g2g12_lv95 <- read_sf("../../../gines/Gener_Daten/2012/ggg_2012/fgdb/LV95/ggg12.gdb", layer = "g2g12")
+```
+
+```{r executing}
+# laying the ground
+kantons <-data.frame("KantonNo" = seq(1:26),
+                       "KantonKurz" = c("ZH", "BE","LU","UR","SZ","OW","NW",
+                                        "GL","ZG","FR","SO","BS","BL","SH",
+                                        "AR","AI","SG","GR","AG","TG","TI",
+                                        "VD","VS","NE","GE","JU"))
+```
+
+### Executing
+```{r}
+g1g12_lv03 <- cleaning(g1g12_lv03) %>%
+  dplyr::inner_join(.,kantons,by = "KantonNo") %>%
+  reorder(.)
+G1G12 <- write_sf(g1g12_lv03,"gen12/g1g12.shp")
+
+g2g12_lv03 <- cleaning(g2g12_lv03) %>%
+  dplyr::inner_join(.,kantons,by = "KantonNo") %>%
+  reorder(.)
+G1G12 <- write_sf(g2g12_lv03,"gen12/g2g12.shp")
+
+# lv95
+g1g12_lv95 <- cleaning(g1g12_lv95) %>%
+  dplyr::inner_join(.,kantons,by = "KantonNo") %>%
+  reorder(.)
+G1G12lv95 <- write_sf(g1g12_lv95,"gen12/g1g12lv95.shp")
+
+
+g2g12_lv95 <- cleaning(g2g12_lv95) %>%
+  dplyr::inner_join(.,kantons,by = "KantonNo") %>%
+  reorder(.)
+G2G12lv95 <- write_sf(g2g12_lv95,"gen12/g2g12lv95.shp")
+```
+
