@@ -1,0 +1,113 @@
+---
+title: "template-script excel for gines"
+author: "Nikos Bakogiannis"
+date: "20 4 2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r read_excel template}
+library(xlsx)
+library(dplyr)
+
+
+# Variables that can take more than one value
+aggregierbar <- factor(c("Ja", "Nein"))
+
+Einheit <- c("30", "CHF", "30 ha", "100 km", "55 m2", "15 Personen")
+
+Rundung <- seq(1,10)
+
+räumlicher_Gebietsstand = c("ID","Kürzel","Name","Beschreibung","Kategorien",
+                              "Thematik","Stichworte","Datenquelle","gesetzliche Grundlage",
+                              "Grundgesamtheit","Basis-Raumeinheit", "Datensatz (original/gerechnet)",
+                              "Aggregierbar","Interpolationen","Einheit","Rundung","Verfügbar seit",
+                              "Periodizität (in Monaten)","letzter Stand","Bemerkung Raum und Zeit",
+                              "Benutzergruppe","Status","Freigabe","Kontakt","weiterführende Links",
+                              "Cisionstyp","Indikatortyp","Entwicklung (Jahre)","Basis-Indikator 1",
+                              "Basis-Indikator 2","Nutzungsbestimmungen","Datenqualität - weitere Hinweise",
+                              "Bearbeitet am","Erstellt am","Erinnerung Publikationsdatum")
+
+Gemeinden = c(1,1,paste("indicator",as.character(1),sep = ""),paste("indicator",as.character(1),sep = ""),"Testkategorie"," ", " ","GINES GmbH","Auftrag GINES","","Gemeinden","original","Ja","Nein","Variabel","Variabel","24.02.2021","1000","24.02.2021"," ","Testgruppe","Ungeprüft","Geschützt","GINES GmbH"," ","Einwohner","Basis-Indikator"," "," "," "," "," ","10.02.2021","24.02.2021","24.02.2021")
+
+
+
+###########################################
+
+template <- data.frame(
+  räumlicher_Gebietsstand = räumlicher_Gebietsstand, Gemeinden = Gemeinden)
+
+
+df1 <- read.xlsx("6-1-Indicators.xlsx", sheetName = "31.12.1850", header = F, encoding="UTF-8")
+df2 <- read.xlsx("6-1-Indicators.xlsx", sheetName = "31.12.2000", header = F, encoding="UTF-8") 
+df3 <- read.xlsx("6-1-Indicators.xlsx", sheetName = "31.12.2007", header = F, encoding="UTF-8")
+
+
+# write.xlsx(template, file = "test_01.xlsx", sheetName = "Metadaten", row.names = FALSE)
+# write.xlsx(df1, file = "test_01.xlsx", sheetName = "31.12.1850", append=TRUE, row.names=FALSE)
+# write.xlsx(df2, file = "test_01.xlsx", sheetName = "31.12.2000", append=TRUE, row.names=FALSE)
+# write.xlsx(df3, file = "test_01.xlsx", sheetName = "31.12.2007", append=TRUE, row.names=FALSE)
+```
+
+
+
+
+
+```{r finding all possible combinations}
+combined <- expand.grid(aggregierbar, Einheit, Rundung)
+# as an outcome we have 120 different combinations
+
+names(combined) <- c("aggregierbar","Einheit", "Rundung")
+
+comb_mat <- as.matrix(combined) %>% t() %>% as.data.frame() %>%
+  mutate(names = c("aggregierbar","Einheit", "Rundung"))
+
+comb_mat <- comb_mat[, c(121,1:120)] # rearranging columns
+
+```
+
+```{r restructuring}
+template_cleaned <- filter(template, räumlicher_Gebietsstand != "Aggregierbar" &
+                             räumlicher_Gebietsstand != "Einheit" & räumlicher_Gebietsstand != "Rundung")
+
+
+# split combo_mat
+comb_v1 <- comb_mat[,1:2] %>% as.data.frame()
+colnames(comb_v1) <- colnames(template_cleaned)
+
+```
+
+
+```{r automating a little bit}
+# function
+
+getxl <- function(a) {
+  df <- comb_mat[,c(1,a)]
+  colnames(df) <- colnames(template_cleaned)
+  dff <- rbind(template_cleaned,df)
+  rownames(dff) <- 1:nrow(dff)
+  
+  ######
+  filename <- paste("results/test","",as.character(a),".xlsx",sep = "")
+  
+  write.xlsx(dff, file = filename,
+             sheetName = "Metadaten", row.names = FALSE)
+  write.xlsx(df1, file = filename, sheetName = "31.12.1850", append=TRUE, row.names=FALSE)
+  write.xlsx(df2, file = filename, sheetName = "31.12.2000", append=TRUE, row.names=FALSE)
+  write.xlsx(df3, file = filename, sheetName = "31.12.2007", append=TRUE, row.names=FALSE)
+  
+}
+```
+
+
+```{r}
+# Run the function for all 120 combinations
+for (i in 94:121) {getxl(i)}
+```
+
+
+
+
